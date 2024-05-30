@@ -22,9 +22,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['pembuat_lamaran'])) {
         $update = mysqli_query($koneksi, "UPDATE pembuat_lamaran SET nama_tempat = '$nama_tempat', nama_perusahaan = '$nama_perusahaan' WHERE id_user = '$user_id'");
         
         if ($update) {
-            header('Location: homepage.php?status=update_sukses');
+            header('Location: homepage_pembuat_lamaran.php?status=update_sukses');
         } else {
-            header('Location: homepage.php?status=update_gagal');
+            header('Location: homepage_pembuat_lamaran.php?status=update_gagal');
         }
     } 
 }

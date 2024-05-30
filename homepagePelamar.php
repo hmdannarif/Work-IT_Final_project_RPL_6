@@ -12,9 +12,9 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $user_type = $_SESSION['user_type'];
 
-if(isset($_POST['Apply'])){
+if (isset($_POST['Apply'])) {
     $query_user_name = mysqli_query($koneksi, "SELECT Nama FROM user WHERE user_id = '$user_id'");
-    if($row = mysqli_fetch_assoc($query_user_name)) {
+    if ($row = mysqli_fetch_assoc($query_user_name)) {
         $nama_user = $row['Nama'];
 
         // Tangkap data yang dikirimkan melalui form
@@ -27,15 +27,16 @@ if(isset($_POST['Apply'])){
         // Cek apakah pelamar sudah melamar lamaran ini sebelumnya
         $select_application = mysqli_query($koneksi, "SELECT * FROM terlamar WHERE Id_user = '$user_id' AND Id_lamaran = '$lamaran_id'") or die('Query failed');
 
-        if(mysqli_num_rows($select_application) > 0){
+        if (mysqli_num_rows($select_application) > 0) {
             $message[] = 'You have already applied for this job!';
         } else {
-            $queryhistori = "INSERT INTO histori (Id_user,Id_lamaran ,Nama_lamaran) VALUES ('$user_id','$lamaran_id', '$nama_lamaran')";
+            $queryhistori = "INSERT INTO histori (Id_user, Id_lamaran, Nama_lamaran) VALUES ('$user_id', '$lamaran_id', '$nama_lamaran')";
             mysqli_query($koneksi, $queryhistori);
+
             // Simpan data lamaran ke dalam tabel terlamar
-            $query = "INSERT INTO terlamar (Id_user,Id_lamaran ,Nama_lamaran, user_CV, user_Photo,Nama_user) VALUES ('$user_id','$lamaran_id', '$nama_lamaran', '$cv_pelamar', '$foto_pelamar','$nama_user')";
-            
-            if(mysqli_query($koneksi, $query)){
+            $query = "INSERT INTO terlamar (Id_user, Id_lamaran, Nama_lamaran, user_CV, user_Photo, Nama_user) VALUES ('$user_id', '$lamaran_id', '$nama_lamaran', '$cv_pelamar', '$foto_pelamar', '$nama_user')";
+
+            if (mysqli_query($koneksi, $query)) {
                 // Update nilai Total_lamaran di tabel lamaran
                 $update_total_lamaran_query = "UPDATE lamaran SET Total_lamaran = Total_lamaran + 1 WHERE ID_lamaran = '$lamaran_id'";
                 mysqli_query($koneksi, $update_total_lamaran_query);
@@ -58,10 +59,10 @@ if(isset($_POST['Apply'])){
         }
     }
 }
-// Ambil daftar lamaran kerja dari database
-// Include file config.php untuk koneksi ke database
+
 // Fungsi untuk memeriksa apakah pelamar sudah memiliki data tambahan
-function pelamarSudahPunyaDataTambahan($user_id) {
+function pelamarSudahPunyaDataTambahan($user_id)
+{
     global $koneksi;
 
     // Query untuk memeriksa apakah pelamar sudah memiliki data tambahan (CV)
@@ -75,7 +76,6 @@ function pelamarSudahPunyaDataTambahan($user_id) {
         return false; // Jika CV belum ada untuk pelamar, kembalikan false
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -127,7 +127,7 @@ if (isset($_SESSION['search_results'])) {
     if (!empty($search_results)) {
         foreach ($search_results as $result) 
         {?>
-                    <form class="box">
+                    <form class="box" method="post" action="">
                         
                         <div class="box-content">
                             <div class="text-content">
@@ -141,39 +141,39 @@ if (isset($_SESSION['search_results'])) {
                                 <?php if (pelamarSudahPunyaDataTambahan($user_id)) { ?>
                         </div>    
                         
-                <!-- Jika pelamar sudah memiliki data tambahan, redirect ke proses pendaftaran lamaran -->
+                <!-- Jika pelamar sudah memiliki data tambahan, tampilkan form apply -->
                 <?php
 // Ambil semua data dari tabel pelamar berdasarkan ID pelamar yang sedang login
 $select_pelamar = mysqli_query($koneksi, "SELECT * FROM pelamar WHERE id_user = '$user_id'") or die('query failed');
 
 // Periksa apakah ada data yang berhasil diambil
-if(mysqli_num_rows($select_pelamar) > 0) {
+if (mysqli_num_rows($select_pelamar) > 0) {
     // Jika ada data, tampilkan formulir Apply
-    while($fetch_search = mysqli_fetch_assoc($select_pelamar)) {
+    while ($fetch_search = mysqli_fetch_assoc($select_pelamar)) {
 ?>
 
     <div class="box-content">
         <form action="" method="post">
             <!-- Tambahkan input hidden untuk menyimpan ID lamaran yang akan dilamar -->
-            <input type="hidden" name="Apply" value="<?php echo $result['ID_lamaran']; ?>">
+            <input type="hidden" name="product_id" value="<?php echo $result['ID_lamaran']; ?>">
             <!-- Tambahkan input hidden untuk menyimpan CV dan foto pelamar -->
             <input type="hidden" name="CV" value="<?php echo $fetch_search['CV']; ?>">
             <input type="hidden" name="Foto" value="<?php echo $fetch_search['Foto']; ?>">
-            <button class="apply" type="submit">Apply</button>
+            <input type="hidden" name="Nama_Lamaran" value="<?php echo $result['NamaLamaran']; ?>">
+            <input type="hidden" name="Spesifikasi" value="<?php echo $result['Spesifikasi']; ?>">
+            <button class="apply" type="submit" name="Apply">Apply</button>
         </form>
     </div>
 <?php
-    } 
-    ?>
-            <?php }
-             else { ?>
+    }
+?>
+            <?php } else { ?>
                 <!-- Jika pelamar belum memiliki data tambahan, tampilkan pesan dan berikan link untuk menambah data tambahan -->
                 <p>Anda harus menambahkan data tambahan terlebih dahulu sebelum melamar.</p>
                 <a href="form_pelamar.php">Tambahkan data tambahan</a>
-            <?php }; ?>
-        <?php }; ?>
+            <?php } ?>
+        <?php } ?>
         <?php } 
-    //    SEARCH 
     } else {
         echo "Tidak ada hasil pencarian.";
     }
@@ -181,65 +181,61 @@ if(mysqli_num_rows($select_pelamar) > 0) {
     unset($_SESSION['search_results']);
 } else {
     // Tampilkan daftar lamaran kerja seperti biasa
-    // ...}
-  
-$select_product = mysqli_query($koneksi,  "SELECT * from lamaran") 
-or die('query failed');
-if(mysqli_num_rows($select_product) > 0){
-    while($fetch_product = mysqli_fetch_assoc($select_product))
-    {
+    $select_product = mysqli_query($koneksi, "SELECT * FROM lamaran") or die('query failed');
+    if (mysqli_num_rows($select_product) > 0) {
+        while ($fetch_product = mysqli_fetch_assoc($select_product)) {
 ?>
     <form method="post" class="box" action="">
-        </a>
         <div class="box-content">
             <div class="text-content">
                 <div class="Nama_Lamaran"><?php echo $fetch_product['NamaLamaran']; ?></div>
                 <div class="Spesifikasi"><?php echo $fetch_product['Spesifikasi']; ?></div>
-            </div><!-- Tambahkan input hidden untuk menyimpan informasi lamaran -->
-                <input type="hidden" name="Nama_Lamaran" value="<?php echo $fetch_product['NamaLamaran']; ?>">
-                <input type="hidden" name="Spesifikasi" value="<?php echo $fetch_product['Spesifikasi']; ?>">
-                <input type="hidden" name="product_id" value="<?php echo $fetch_product['ID_lamaran']; ?>">
-                <?php if (pelamarSudahPunyaDataTambahan($user_id)) { ?>
+            </div>
+            <!-- Tambahkan input hidden untuk menyimpan informasi lamaran -->
+            <input type="hidden" name="Nama_Lamaran" value="<?php echo $fetch_product['NamaLamaran']; ?>">
+            <input type="hidden" name="Spesifikasi" value="<?php echo $fetch_product['Spesifikasi']; ?>">
+            <input type="hidden" name="product_id" value="<?php echo $fetch_product['ID_lamaran']; ?>">
+            <?php if (pelamarSudahPunyaDataTambahan($user_id)) { ?>
         </div>
-                <!-- Jika pelamar sudah memiliki data tambahan, redirect ke proses pendaftaran lamaran -->
+                <!-- Jika pelamar sudah memiliki data tambahan, tampilkan form apply -->
                 <?php
 // Ambil semua data dari tabel pelamar berdasarkan ID pelamar yang sedang login
 $select_pelamar = mysqli_query($koneksi, "SELECT * FROM pelamar WHERE id_user = '$user_id'") or die('query failed');
 
 // Periksa apakah ada data yang berhasil diambil
-if(mysqli_num_rows($select_pelamar) > 0) {
+if (mysqli_num_rows($select_pelamar) > 0) {
     // Jika ada data, tampilkan formulir Apply
-    while($fetch_pelamar = mysqli_fetch_assoc($select_pelamar)) {
+    while ($fetch_pelamar = mysqli_fetch_assoc($select_pelamar)) {
 ?>
         <div class="box-content">
             <form action="" method="post">
                 <!-- Tambahkan input hidden untuk menyimpan ID lamaran yang akan dilamar -->
-                <input type="hidden" name="Apply" value="<?php echo $fetch_product['ID_lamaran']; ?>">
+                <input type="hidden" name="product_id" value="<?php echo $fetch_product['ID_lamaran']; ?>">
                 <!-- Tambahkan input hidden untuk menyimpan CV dan foto pelamar -->
                 <input type="hidden" name="CV" value="<?php echo $fetch_pelamar['CV']; ?>">
                 <input type="hidden" name="Foto" value="<?php echo $fetch_pelamar['Foto']; ?>">
-                <button class="apply" type="submit">Apply</button>
+                <input type="hidden" name="Nama_Lamaran" value="<?php echo $fetch_product['NamaLamaran']; ?>">
+                <input type="hidden" name="Spesifikasi" value="<?php echo $fetch_product['Spesifikasi']; ?>">
+                <button class="apply" type="submit" name="Apply">Apply</button>
             </form>
         </div>
 <?php
-    } 
-    ?>
-            <?php }
-             else { ?>
+    }
+?>
+            <?php } else { ?>
                 <!-- Jika pelamar belum memiliki data tambahan, tampilkan pesan dan berikan link untuk menambah data tambahan -->
                 <p>Anda harus menambahkan data tambahan terlebih dahulu sebelum melamar.</p>
                 <a href="form_pelamar.php">Tambahkan data tambahan</a>
-            <?php }; ?>
-        <?php }; ?>
+            <?php } ?>
+        <?php } ?>
     </form>
 <?php
-    };
-};
-};
+        }
+    }
+}
 ?>
 </div>
         <a href="logout.php" class="logout">Logout</a> <!-- Tambahkan link logout di sini -->
     </div>
-    
 </body>
 </html>
